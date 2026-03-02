@@ -19,10 +19,8 @@ public class SecurityConfig {
 
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
-
     @Autowired
     private CustomUserDetailsService customUserDetailsService;
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -30,9 +28,7 @@ public class SecurityConfig {
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
-
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(customUserDetailsService);
-
         provider.setPasswordEncoder(passwordEncoder());
 
         return provider;
@@ -53,11 +49,15 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers(
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**"
-                        ).permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/projects/create").hasRole("ADMIN")
+                        .requestMatchers("/api/projects/delete/**").hasRole("ADMIN")
+                        // User and Admin endpoints
+                        .requestMatchers("/api/projects/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/test").hasAnyRole("USER", "ADMIN")
+                        // Any other request requires authentication
                         .anyRequest().authenticated()
+
                 )
 
                 .sessionManagement(session ->
